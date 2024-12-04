@@ -5,6 +5,8 @@ import org.json4s.Formats
 import org.json4s.native.JsonMethods.*
 import org.json4s.native.{Json, Serialization}
 import play.api.libs.json._
+import org.json4s._
+import org.json4s.JsonDSL._
 
 import scala.collection.mutable
 import scala.io.Source
@@ -33,6 +35,7 @@ object Scalix extends App {
   val ActorMovies: mutable.Map[Int, Set[(Int, String)]] = mutable.Map()
   val MovieDirector: mutable.Map[Int, Option[(Int, String)]] = mutable.Map()
   val collaboration: mutable.Map[(FullName, FullName), Int] = mutable.Map()
+  findActorIdv2("Tom", "Hardy")
 
   def findActorId(name: String, surname: String): Option[Int] = {
     implicit val formats: Formats = DefaultFormats
@@ -111,41 +114,44 @@ object Scalix extends App {
   }
 
   def readSecondaryCache(filename: String): JValue = {
-    val path = "../../data/" + filename + ".json"
+    val path = "src/data/" + filename + ".json"
     parse(Source.fromFile(path).mkString)
   }
 
   def writeSecondaryCache(filename: String, text: JValue) = {
-    val path = "../../data/" + filename + ".json"
+    val path = "src/data/" + filename + ".json"
     val out = new PrintWriter(path)
     out.print(compact(render(text)))  
     out.close()
   }
 
-//  def findActorIdv2(name: String, surname: String): Option[Int] = {
-//    implicit val formats: Formats = DefaultFormats
-//
-//    if (ActorId.contains((name, surname))) {
-//      ActorId((name, surname))
-//    }
-//    else {
-//      val json = readSecondaryCache("actor$id")
-//      if ((json \ "actor" \ "FullName").equals(name + " " + surname)) {
-//        (json \ "actor" \ "FullName").extractOpt[Int]
-//      }
-//      else {
-//        val query = s"$name+$surname".replace(" ", "+")
-//        val url = s"https://api.themoviedb.org/3/search/person?api_key=" + key + "&query=" + query
-//        val response = Source.fromURL(url)
-//        val content = response.mkString
-//        val json2 = parse(content)
-//        val actorId = (json2 \ "results").children.headOption.flatMap(result => (result \ "id").extractOpt[Int])
-//        val actorJson = ("actor" -> ("FullName" -> (name + " " + surname)) ~ ("id" -> id))
-//        writeSecondaryCache("actor$id", actorJson)
-//        ActorId += ((name, surname) -> actorId.get)
-//        actorId
-//      }
-//    }
+  def findActorIdv2(name: String, surname: String): Option[Int] = {
+    implicit val formats: Formats = DefaultFormats
+
+    if (ActorId.contains((name, surname))) {
+      ActorId((name, surname))
+    }
+    else {
+      val json = readSecondaryCache("actor$id")
+      if ((json \ "actor" \ "FullName").equals(name + " " + surname)) {
+        (json \ "actor" \ "FullName").extractOpt[Int]
+      }
+      else {
+        val query = s"$name+$surname".replace(" ", "+")
+        val url = s"https://api.themoviedb.org/3/search/person?api_key=" + key + "&query=" + query
+        val response = Source.fromURL(url)
+        val content = response.mkString
+        val json2 = parse(content)
+        val actorId = (json2 \ "results").children.headOption.flatMap(result => (result \ "id").extractOpt[Int])
+        val actorJson = ("actor" -> ("FullName" -> (name + " " + surname)) ~ ("id" -> actorId))
+        writeSecondaryCache("actor$id", actorJson)
+        ActorId += ((name, surname) -> actorId)
+        println(actorId)
+        println(ActorId)
+        actorId
+      }
+    }
+  }
 
 
 
@@ -154,6 +160,5 @@ object Scalix extends App {
 
 
 
-  
 
 }
