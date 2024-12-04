@@ -3,7 +3,8 @@ package scalix
 import org.json4s.*
 import org.json4s.Formats
 import org.json4s.native.JsonMethods.*
-import org.json4s.native.Serialization
+import org.json4s.native.{Json, Serialization}
+import play.api.libs.json._
 
 import scala.collection.mutable
 import scala.io.Source
@@ -22,6 +23,7 @@ object Scalix extends App {
   println(contents)
   findActorId("Tom", "Hardy")
   findActorMovies(2524)
+  println(findMovieDirector(703284))
   val anna = FullName("Anna", "Popplewell")
   val skandar = FullName("Skandar", "Keynes")
   println(collaboration(anna, skandar))
@@ -31,8 +33,6 @@ object Scalix extends App {
   val ActorMovies: mutable.Map[Int, Set[(Int, String)]] = mutable.Map()
   val MovieDirector: mutable.Map[Int, Option[(Int, String)]] = mutable.Map()
   val collaboration: mutable.Map[(FullName, FullName), Int] = mutable.Map()
-
-
 
   def findActorId(name: String, surname: String): Option[Int] = {
     implicit val formats: Formats = DefaultFormats
@@ -48,6 +48,7 @@ object Scalix extends App {
     println(actorId)
     actorId
   }
+
 
   def findActorMovies(actorId: Int): Set[(Int, String)] = {
     implicit val formats: Formats = DefaultFormats
@@ -66,6 +67,29 @@ object Scalix extends App {
     println(movies.toSet)
     movies.toSet
   }
+
+  def findMovieDirector(movieId: Int): Option[(Int, String)] = {
+    implicit val formats: Formats = DefaultFormats
+
+    val url = s"https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=" + key
+    val response = Source.fromURL(url)
+    val content = response.mkString
+    val json = parse(content)
+
+    // Extraire le champ "crew" comme un tableau
+    val crew = (json \ "crew").extractOpt[List[Map[String, Any]]].getOrElse(List.empty)
+
+    // Trouver le réalisateur dans la liste "crew"
+    val director = crew.find(member => member.get("job").contains("Director"))
+    println(director)
+
+    // Extraire le nom du réalisateur (s'il existe)
+    director.flatMap { member =>
+      for {
+        id <- member.get("id").collect { case id: BigInt => id.toInt } // Convertir BigInt en Int
+        name <- member.get("name").collect { case name: String => name }
+      } yield (id, name)
+    }
 
 
   case class FullName(firstName: String, lastName: String)
@@ -121,6 +145,9 @@ object Scalix extends App {
         actorId
       }
     }
+
+
+
 
 
 
