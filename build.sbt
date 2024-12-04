@@ -9,3 +9,4 @@ lazy val root = (project in file("."))
 
 libraryDependencies += "org.json4s" %% "json4s-ast" % "4.0.7"
 libraryDependencies += "org.json4s" %% "json4s-native" % "4.1.0-M8"
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.6"
