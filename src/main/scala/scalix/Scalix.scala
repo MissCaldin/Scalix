@@ -16,6 +16,7 @@ object Scalix extends App {
   val json = parse(contents)
   println(contents)
   findActorId("Tom", "Hardy")
+  findActorMovies(2524)
 
   def findActorId(name: String, surname: String): Option[Int] = {
     implicit val formats: Formats = DefaultFormats
@@ -31,4 +32,26 @@ object Scalix extends App {
     println(actorId)
     actorId
   }
+
+  def findActorMovies(actorId: Int): Set[(Int, String)] = {
+    implicit val formats: Formats = DefaultFormats
+
+    val url = s"https://api.themoviedb.org/3/person/$actorId/movie_credits?api_key=" + key
+
+    val response = Source.fromURL(url)
+    val content = response.mkString
+    val json = parse(content)
+    println(content)
+    val movies = (json \ "cast").children.map { movie =>
+      val movieId = (movie \ "id").extract[Int]
+      val movieTitle = (movie \ "title").extract[String]
+      movieId -> movieTitle
+    }
+    println(movies.toSet)
+    movies.toSet
+  }
+
+
+
+
 }
