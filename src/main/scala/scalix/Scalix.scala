@@ -35,7 +35,8 @@ object Scalix extends App {
   val ActorMovies: mutable.Map[Int, Set[(Int, String)]] = mutable.Map()
   val MovieDirector: mutable.Map[Int, Option[(Int, String)]] = mutable.Map()
   val collaboration: mutable.Map[(FullName, FullName), Int] = mutable.Map()
-  findActorIdv2("Tom", "Hardy")
+  println(findActorIdv2("Tom", "Hardy"))
+  println(findActorMoviesv2(2524))
 
   def findActorId(name: String, surname: String): Option[Int] = {
     implicit val formats: Formats = DefaultFormats
@@ -134,7 +135,7 @@ object Scalix extends App {
     else {
       val json = readSecondaryCache("actor$id")
       if ((json \ "actor" \ "FullName").equals(name + " " + surname)) {
-        (json \ "actor" \ "FullName").extractOpt[Int]
+        (json \ "actor" \ "id").extractOpt[Int]
       }
       else {
         val query = s"$name+$surname".replace(" ", "+")
@@ -152,6 +153,40 @@ object Scalix extends App {
       }
     }
   }
+
+  def findActorMoviesv2(actorId: Int): Set[(Int, String)] = {
+    implicit val formats: Formats = DefaultFormats
+
+    if (ActorMovies.contains(actorId)) {
+      ActorMovies(actorId)
+    }
+    else {
+      val json = readSecondaryCache("actor$movies")
+      if ((json \ "actor" \ "id").equals(actorId)) {
+        (json \ "actor" \ "Movies").extractOpt[Set[(Int, String)]].get
+      }
+      else {
+
+        val url = s"https://api.themoviedb.org/3/person/$actorId/movie_credits?api_key=" + key
+
+        val response = Source.fromURL(url)
+        val content = response.mkString
+        val json = parse(content)
+        val movies = (json \ "cast").children.map { movie =>
+          val movieId = (movie \ "id").extract[Int]
+          val movieTitle = (movie \ "title").extract[String]
+          movieId -> movieTitle
+        }
+        val moviesJson = JArray(movies.map { case (id, title) => JObject("id" -> JInt(id), "title" -> JString(title)) }.toList)
+        val actorJson = ("actor" -> ("id" -> (actorId)) ~ ("Movies" -> moviesJson))
+        writeSecondaryCache("actor$movies", actorJson)
+        ActorMovies += ((actorId) -> movies.toSet)
+        movies.toSet
+      }
+    }
+  }
+
+
 
 
 
