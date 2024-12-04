@@ -2,4 +2,6 @@
 
 !.gitignore
 !.src/
+!.src/main/
+!.src/main/scala/
 !.src/main/scala/scalix/
