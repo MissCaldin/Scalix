@@ -22,4 +22,8 @@ object Test extends App {
     println(s"  - ${m._1} de ${m._2}")
   }
 
+  //Avantages:  plus de modularité, les appels à la base de données ne sont fait qu'une fois à la création de l'objet,
+  //Réutilisabilité des objets, structure plus compréhensible donc plus facile pou la maintenance
+  //Inconvéniants: Structure plus lourde et pas forcément nécessaire pour des petites manipulations de données
+
 }
