@@ -65,6 +65,32 @@ object Scalix extends App {
     println(" - " + title + ", réalisé par " + director)
   }
 
+  //4.1 Quizz
+  val collaborationCount = mutable.Map[(FullName, FullName), Int]().withDefaultValue(0)
+
+  // Dico des couples d'acteurs avec en valeur leurs nom et prénom
+  val actorPairs: mutable.Map[(Int, Int), (FullName, FullName)] = for {
+    ((name1, surname1), id1) <- ActorId
+    ((name2, surname2), id2) <- ActorId if id1.getOrElse(0) < id2.getOrElse(0)
+  } yield (id1.getOrElse(0), id2.getOrElse(0)) -> (FullName(name1, surname1), FullName(name2, surname2))
+
+  actorPairs.foreach { case ((id1, id2), (fullname1, fullname2)) =>
+    collaboration(fullname1, fullname2).foreach {
+      case (director, movie) =>
+        collaborationCount((fullname1, fullname2)) += 1
+    }
+  }
+
+  val maxCollaborations = collaborationCount.values.max
+  collaborationCount.collect {
+    case (pair, count) if count == maxCollaborations => pair
+  }.toSet
+  println("Les acteurs et actrices ayant le plus de collaborations ensembles sont:")
+  for(couple <- collaborationCount) {
+    println(couple._1._1.firstName + " " + couple._1._1.lastName + " et " + couple._1._2.firstName + " " +
+      couple._1._2.lastName + " avec " + couple._2 + " collaborations !")
+  }
+
   def findActorId(name: String, surname: String): Option[Int] = {
     implicit val formats: Formats = DefaultFormats
 
