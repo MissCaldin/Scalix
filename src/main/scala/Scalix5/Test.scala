@@ -2,23 +2,20 @@ package Scalix5
 
 object Test extends App {
 
-  println("Test de la partie 5")
+  println("Test de la partie 5: Exercice d'architecture")
 
-  println("Test de actor")
+
   val anna = new Actor("Anna", "Popplewell")
   val skandar = new Actor("Skandar", "Keynes")
   println(anna)
-  println(s"Acteur : ${anna.name} ${anna.surname}, ID : ${anna.id}, Films : ${anna.movies}")
-
-  println("Test de Director")
-  println("Nous cherchons le directeur du film: ")
+  println(s"L'actrice : ${anna.name} ${anna.surname} a pour ID : ${anna.id}. Elle a joué dans:")
+  for(movie <- anna.movies) {
+    println(" - " + movie.id.toString + ": " + movie.title)
+  }
   val movie = anna.movies.head
-  println(movie)
-  println("qui se trouve être:")
   val director = new Director(movie.id)
-  println(director)
+  println("Le directeur du film " + movie.title + " est " + director.name + "dont l'id est " + director.id.toString)
 
-  println("Test de Collaboration")
   println(s"${anna.name} ${anna.surname} et ${skandar.name} ${skandar.surname} ont collaboré sur:")
   val movies = Actor.collaborationBetween(anna, skandar)
   for (m <- movies) {
